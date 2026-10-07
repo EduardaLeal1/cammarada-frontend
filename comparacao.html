@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cammarada — Comparação de Dados</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #F4F5F7;
+            color: #1a1a1a;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* =========================
+           SIDEBAR
+        ========================= */
+
+        .sidebar {
+            width: 220px;
+            min-width: 220px;
+            background: #fff;
+            border-right: 1px solid #E4E6EA;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 1.1rem 1rem;
+            border-bottom: 1px solid #E4E6EA;
+        }
+
+        .logo-box {
+            width: 34px;
+            height: 34px;
+            background: #E8650A;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .logo-text {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+
+        .logo-sub {
+            font-size: 11px;
+            color: #888;
+            margin-top: 1px;
+        }
+
+        .sidebar-section {
+            font-size: 10.5px;
+            font-weight: 600;
+            color: #aaa;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            padding: 1rem 1rem .4rem;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            padding: .48rem .75rem;
+            margin: 2px .5rem;
+            border-radius: 7px;
+            cursor: pointer;
+            font-size: 13.5px;
+            color: #555;
+            transition: background .12s;
+        }
+
+        .nav-item:hover {
+            background: #F4F5F7;
+            color: #1a1a1a;
+        }
+
+        .nav-item.active {
+            background: #FFF0E6;
+            color: #C4520A;
+            font-weight: 500;
+        }
+
+        .sidebar-footer {
+            margin-top: auto;
+            border-top: 1px solid #E4E6EA;
+            padding: .6rem .5rem;
+        }
+
+        /* =========================
+           MAIN
+        ========================= */
+
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .topbar {
+            background: #fff;
+            border-bottom: 1px solid #E4E6EA;
+            padding: .85rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+
+        .topbar h2 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .topbar p {
+            margin: 2px 0 0;
+            color: #888;
+            font-size: 12.5px;
+        }
+
+        .topbar-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* =========================
+           BOTÕES
+        ========================= */
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: .42rem .9rem;
+            border-radius: 7px;
+            font-size: 13px;
+            cursor: pointer;
+            border: 1px solid #D0D3D9;
+            background: #fff;
+            color: #333;
+            transition: background .12s;
+        }
+
+        .btn:hover {
+            background: #F4F5F7;
+        }
+
+        .btn-secondary {
+            background: #fff;
+            color: #333;
+            border-color: #D0D3D9;
+        }
+
+        .btn-primary {
+            background: #E8650A;
+            color: #fff;
+            border-color: #E8650A;
+        }
+
+        .btn-primary:hover {
+            background: #cf5808;
+        }
+
+        .btn:disabled {
+            opacity: .4;
+            cursor: default;
+        }
+
+        /* =========================
+           CONTEÚDO
+        ========================= */
+
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.2rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        /* =========================
+           STEPPER
+        ========================= */
+
+        .stepper {
+            display: flex;
+            background: #fff;
+            border: 1px solid #E4E6EA;
+            border-radius: 10px;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .step {
+            flex: 1;
+            padding: .75rem;
+            text-align: center;
+            border-right: 1px solid #E4E6EA;
+            color: #999;
+            font-size: 12.5px;
+        }
+
+        .step:last-child {
+            border-right: none;
+        }
+
+        .step.active {
+            color: #C4520A;
+            background: #FFF8F4;
+            font-weight: 600;
+        }
+
+        .step-number {
+            display: inline-flex;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            align-items: center;
+            justify-content: center;
+            margin-right: 5px;
+            background: #F0F1F3;
+            font-size: 12px;
+        }
+
+        .step.active .step-number {
+            background: #E8650A;
+            color: #fff;
+        }
+
+        /* =========================
+           CARDS
+        ========================= */
+
+        .card {
+            background: #fff;
+            border: 1px solid #E4E6EA;
+            border-radius: 10px;
+            padding: 1rem 1.2rem;
+        }
+
+        .card-title {
+            margin: 0 0 .35rem;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .card-subtitle {
+            margin: 0 0 1rem;
+            color: #888;
+            font-size: 12.5px;
+        }
+
+        /* =========================
+           TABELAS
+        ========================= */
+
+        .tabelas-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 10px;
+        }
+
+        .tabela-card {
+            border: 2px solid #E4E6EA;
+            border-radius: 9px;
+            padding: .85rem 1rem;
+            cursor: pointer;
+            transition: all .15s;
+            background: #fff;
+        }
+
+        .tabela-card:hover {
+            border-color: #E8650A;
+            background: #FFF8F4;
+        }
+
+        .tabela-card.selected {
+            border-color: #E8650A;
+            background: #FFF0E6;
+        }
+
+        .tabela-icon {
+            font-size: 22px;
+            margin-bottom: 6px;
+        }
+
+        .tabela-nome {
+            font-weight: 600;
+            font-size: 13.5px;
+            color: #1a1a1a;
+        }
+
+        .tabela-desc {
+            font-size: 11.5px;
+            color: #888;
+            margin-top: 3px;
+            line-height: 1.4;
+        }
+
+        /* =========================
+           COLUNAS
+        ========================= */
+
+        .colunas-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .coluna-box {
+            border: 1px solid #E4E6EA;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #fff;
+        }
+
+        .coluna-header {
+            padding: .7rem .9rem;
+            background: #FAFAFA;
+            border-bottom: 1px solid #E4E6EA;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .coluna-header small {
+            display: block;
+            margin-top: 3px;
+            font-weight: 400;
+            color: #888;
+            font-size: 11.5px;
+        }
+
+        .coluna-lista {
+            max-height: 330px;
+            overflow-y: auto;
+            padding: 8px;
+        }
+
+        .coluna-item {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            padding: 5px 8px;
+            border-radius: 6px;
+            font-size: 12.5px;
+            cursor: pointer;
+        }
+
+        .coluna-item:hover {
+            background: #F4F5F7;
+        }
+
+        .coluna-item input {
+            accent-color: #E8650A;
+        }
+
+        /* =========================
+           GRUPOS
+        ========================= */
+
+        .grupos-box {
+            border: 1px solid #E4E6EA;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: .75rem;
+        }
+
+        .grupos-header {
+            padding: .7rem .9rem;
+            background: #FAFAFA;
+            border-bottom: 1px solid #E4E6EA;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .grupos-header small {
+            display: block;
+            margin-top: 3px;
+            font-weight: 400;
+            color: #888;
+            font-size: 11.5px;
+        }
+
+        .grupos-lista {
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 8px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 2px;
+        }
+
+        /* =========================
+           MODO DE COMPARAÇÃO
+        ========================= */
+
+        .modo-container {
+            display: flex;
+            gap: 20px;
+            margin-top: 14px;
+        }
+
+        .modo-option {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 12.5px;
+            cursor: pointer;
+        }
+
+        .modo-option input {
+            accent-color: #E8650A;
+        }
+
+        /* =========================
+           RESULTADO
+        ========================= */
+
+        .resultado-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .resultado-info {
+            font-size: 12.5px;
+            color: #888;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            border: 1px solid #E4E6EA;
+            border-radius: 7px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12.5px;
+        }
+
+        th {
+            background: #F5F6F7;
+            padding: 9px 10px;
+            text-align: left;
+            border-bottom: 1px solid #DFE3E5;
+            white-space: nowrap;
+            font-size: 11.5px;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 8px 10px;
+            border-bottom: 1px solid #EEEEEE;
+            white-space: nowrap;
+            font-size: 12.5px;
+        }
+
+        tr:hover td {
+            background: #FAFAFA;
+        }
+
+        .numero {
+            text-align: right;
+        }
+
+        .vazio {
+            padding: 35px;
+            text-align: center;
+            color: #999;
+            font-size: 12.5px;
+        }
+
+        /* =========================
+           MENSAGENS
+        ========================= */
+
+        .erro {
+            background: #FFF4F2;
+            color: #C62828;
+            border: 1px solid #F5C6C2;
+            padding: 10px 12px;
+            border-radius: 7px;
+            margin-bottom: 0;
+            font-size: 12.5px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 30px;
+            color: #888;
+            font-size: 12.5px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* =========================
+           RESPONSIVO
+        ========================= */
+
+        @media (max-width: 800px) {
+
+            .sidebar {
+                width: 180px;
+                min-width: 180px;
+            }
+
+            .colunas-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .topbar {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+            .topbar-actions {
+                width: 100%;
+            }
+
+            .tabelas-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<aside class="sidebar">
+
+    <div class="sidebar-logo">
+        <div class="logo-box">🦐</div>
+
+        <div>
+            <div class="logo-text">Cammarada</div>
+            <div class="logo-sub">Banco de dados</div>
+        </div>
+    </div>
+
+    <div class="sidebar-section">Navegação</div>
+
+    <div class="nav-item" onclick="location.href='index.html'">
+        📋 Tabelas simples
+    </div>
+
+    <div class="nav-item" onclick="location.href='consulta.html'">
+        🔀 Consulta cruzada
+    </div>
+
+    <div class="nav-item active" onclick="location.href='comparacao.html'">
+        ⚖️ Comparar dados
+    </div>
+
+    <div class="sidebar-footer">
+        <div class="nav-item" style="color:#aaa;font-size:12px">
+            ℹ️ Cammarada v1.0
+        </div>
+    </div>
+
+</aside>
+
+
+<main class="main">
+
+    <header class="topbar">
+
+        <div>
+            <h2>Comparação de Dados</h2>
+
+            <p>
+                Compare variáveis de uma mesma tabela entre diferentes grupos
+            </p>
+        </div>
+
+        <div class="topbar-actions">
+
+            <button
+                class="btn btn-secondary"
+                onclick="resetar()">
+                ↺ Limpar
+            </button>
+
+            <button
+                class="btn btn-secondary"
+                onclick="exportarCSV()">
+                ⬇️ Exportar CSV
+            </button>
+
+        </div>
+
+    </header>
+
+
+    <div class="content">
+
+        <!-- STEPPER -->
+
+        <div class="stepper">
+
+            <div class="step active" id="step1">
+                <span class="step-number">1</span>
+                Escolher tabela
+            </div>
+
+            <div class="step" id="step2">
+                <span class="step-number">2</span>
+                Escolher variáveis
+            </div>
+
+            <div class="step" id="step3">
+                <span class="step-number">3</span>
+                Grupos
+            </div>
+
+            <div class="step" id="step4">
+                <span class="step-number">4</span>
+                Resultado
+            </div>
+
+        </div>
+
+
+        <!-- ETAPA 1 -->
+
+        <section class="card" id="etapa1">
+
+            <h3 class="card-title">
+                1. Escolha uma tabela
+            </h3>
+
+            <p class="card-subtitle">
+                A comparação será realizada dentro de uma única tabela.
+            </p>
+
+            <div
+                id="tabelas-grid"
+                class="tabelas-grid">
+            </div>
+
+        </section>
+
+
+        <!-- ETAPA 2 -->
+
+        <section
+            class="card hidden"
+            id="etapa2">
+
+            <h3 class="card-title">
+                2. Escolha as variáveis
+            </h3>
+
+            <p class="card-subtitle">
+                Selecione as variáveis que deseja comparar e escolha uma variável
+                para separar os grupos.
+            </p>
+
+
+            <div class="colunas-grid">
+
+                <div class="coluna-box">
+
+                    <div class="coluna-header">
+
+                        📊 Variáveis de valor
+
+                        <small>
+                            Variáveis que serão comparadas.
+                        </small>
+
+                    </div>
+
+                    <div
+                        class="coluna-lista"
+                        id="colunas-valor">
+                    </div>
+
+                </div>
+
+
+                <div class="coluna-box">
+
+                    <div class="coluna-header">
+
+                        🗂️ Agrupar por
+
+                        <small>
+                            Escolha uma variável para separar os grupos.
+                        </small>
+
+                    </div>
+
+                    <div
+                        class="coluna-lista"
+                        id="colunas-grupo">
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div
+                style="margin-top:18px;display:flex;justify-content:flex-end;">
+
+                <button
+                    class="btn btn-primary"
+                    onclick="irParaGrupos()">
+
+                    Continuar para grupos →
+
+                </button>
+
+            </div>
+
+        </section>
+
+
+        <!-- ETAPA 3 -->
+
+        <section
+            class="card hidden"
+            id="etapa3">
+
+            <h3 class="card-title">
+                3. Escolha os grupos
+            </h3>
+
+            <p class="card-subtitle">
+                Selecione os grupos que deseja comparar entre si.
+            </p>
+
+
+            <div class="grupos-box">
+
+                <div class="grupos-header">
+
+                    🗂️ Agrupador selecionado
+
+                    <small id="agrupador-info"></small>
+
+                </div>
+
+            </div>
+
+
+            <div class="grupos-box">
+
+                <div class="grupos-header">
+
+                    🔎 Valores disponíveis
+
+                    <small>
+                        Selecione os grupos que participarão da comparação.
+                    </small>
+
+                </div>
+
+                <div
+                    class="grupos-lista"
+                    id="grupos-container">
+                </div>
+
+            </div>
+
+
+            <div>
+
+                <div
+                    class="coluna-header"
+                    style="border:1px solid #E4E6EA;border-radius:8px;">
+
+                    ⚙️ Tipo de comparação
+
+                    <small>
+                        Escolha como os dados serão apresentados.
+                    </small>
+
+                </div>
+
+
+                <div class="modo-container">
+
+                    <label class="modo-option">
+
+                        <input
+                            type="radio"
+                            name="modo"
+                            value="agrupado"
+                            checked>
+
+                        Comparação agrupada
+
+                    </label>
+
+
+                    <label class="modo-option">
+
+                        <input
+                            type="radio"
+                            name="modo"
+                            value="linhas">
+
+                        Linhas individuais
+
+                    </label>
+
+                </div>
+
+            </div>
+
+
+            <div
+                style="margin-top:18px;display:flex;justify-content:flex-end;">
+
+                <button
+                    class="btn btn-primary"
+                    onclick="executarComparacao()">
+
+                    ⚖️ Comparar dados
+
+                </button>
+
+            </div>
+
+        </section>
+
+
+        <!-- ERRO -->
+
+        <div
+            id="erro-container"
+            class="erro hidden">
+        </div>
+
+
+        <!-- RESULTADO -->
+
+        <section
+            class="card hidden"
+            id="resultado">
+
+            <div class="resultado-header">
+
+                <div>
+
+                    <h3 class="card-title">
+                        Resultado da comparação
+                    </h3>
+
+                    <div
+                        id="resultado-info"
+                        class="resultado-info">
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div
+                id="resultado-loading"
+                class="loading hidden">
+
+                ⏳ Consultando banco de dados...
+
+            </div>
+
+
+            <div
+                id="resultado-tabela"
+                class="table-wrapper">
+            </div>
+
+        </section>
+
+    </div>
+
+</main>
+
+
+<script src="js/comparacao.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cammarada — Banco de Dados</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{
+      font-family:'Segoe UI',Arial,sans-serif;
+      background:#F4F5F7;
+      color:#1a1a1a;
+      display:flex;
+      height:100vh;
+      overflow:hidden}
+
+    /* ── Sidebar ── */
+    .sidebar{width:220px;min-width:220px;background:#fff;border-right:1px solid #E4E6EA;display:flex;flex-direction:column}
+    .sidebar-logo{display:flex;align-items:center;gap:10px;padding:1.1rem 1rem;border-bottom:1px solid #E4E6EA}
+    .logo-box{width:34px;height:34px;background:#E8650A;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px}
+    .logo-text{font-size:15px;font-weight:600}
+    .logo-sub{font-size:11px;color:#888;margin-top:1px}
+    .sidebar-section{font-size:10.5px;font-weight:600;color:#aaa;text-transform:uppercase;letter-spacing:.06em;padding:1rem 1rem .4rem}
+    .nav-item{display:flex;align-items:center;gap:9px;padding:.48rem .75rem;margin:2px .5rem;border-radius:7px;cursor:pointer;font: size 13.5px;color:#555;transition:background .12s}
+    .nav-item:hover{background:#F4F5F7;color:#1a1a1a}
+    .nav-item.active{background:#FFF0E6;color:#C4520A;font-weight:500}
+    .sidebar-footer{margin-top:auto;border-top:1px solid #E4E6EA;padding:.6rem .5rem}
+
+    /* ── Main ── */
+    .main{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+    .topbar{background:#fff;border-bottom:1px solid #E4E6EA;padding:.85rem 1.5rem;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+    .topbar-title{font-size:16px;font-weight:600}
+    .topbar-sub{font-size:12.5px;color:#888;margin-top:2px}
+
+    /* ── Botões ── */
+    .btn{display:inline-flex;align-items:center;gap:6px;padding:.42rem .9rem;border-radius:7px;font-size:13px;cursor:pointer;border:1px solid #D0D3D9;background:#fff;color:#333;transition:background .12s}
+    .btn:hover{background:#F4F5F7}
+    .btn-primary{background:#E8650A;color:#fff;border-color:#E8650A}
+    .btn-primary:hover{background:#cf5808}
+    .btn-outline{border-color:#185FA5;color:#185FA5}
+    .btn-outline:hover{background:#E6F1FB}
+    .btn:disabled{opacity:.4;cursor:default}
+
+    .content{
+      flex:1;
+      min-height:0;
+      overflow-y:auto;
+      padding:1.2rem 1.5rem;
+      display:flex;
+      flex-direction:column;
+      gap:1rem
+    }
+
+    /* ── Cards de tabela para seleção ── */
+    .tabelas-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+    .tabela-card{border:2px solid #E4E6EA;border-radius:10px;padding:.85rem 1rem;cursor:pointer;transition:all .15s;background:#fff;user-select:none}
+    .tabela-card:hover{border-color:#E8650A;background:#FFF8F4}
+    .tabela-card.selected{border-color:#E8650A;background:#FFF0E6}
+    .tabela-card .tc-icon{font-size:22px;margin-bottom:6px}
+    .tabela-card .tc-nome{font-size:13.5px;font-weight:600;color:#1a1a1a}
+    .tabela-card .tc-desc{font-size:11.5px;color:#888;margin-top:3px;line-height:1.4}
+    .tabela-card.selected .tc-nome{color:#C4520A}
+
+    /* ── Seção genérica ── */
+    .section-card{background:#fff;border:1px solid #E4E6EA;border-radius:10px;padding:1rem 1.2rem}
+    .section-title{font-size:14px;font-weight:600;margin-bottom:.75rem;display:flex;align-items:center;gap:8px}
+    .section-title .tag{font-size:11px;background:#FFF0E6;color:#E8650A;border-radius:99px;padding:2px 8px;font-weight:500}
+    .section-title .tag-blue{background:#E6F1FB;color:#185FA5}
+
+    /* ── Filtros ── */
+    .filtros-row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}
+    .filter-group{display:flex;flex-direction:column;gap:4px}
+    .filter-group.hidden{display:none}
+    .filter-label{font-size:12px;color:#666;font-weight:500}
+    .filter-group select,.filter-group input{height:34px;padding:0 10px;border-radius:7px;border:1px solid #D0D3D9;background:#fff;color:#1a1a1a;font-size:13px;min-width:140px;outline:none}
+    .filter-group select:focus,.filter-group input:focus{border-color:#E8650A}
+
+    /* ── Resultado ── */
+    .result-stats{display:flex;gap:10px;flex-wrap:wrap}
+    .stat-pill{background:#fff;border:1px solid #E4E6EA;border-radius:8px;padding:.5rem .9rem;font-size:13px}
+    .stat-pill strong{color:#E8650A}
+    .stat-pill.blue strong{color:#185FA5}
+
+   .table-card{
+    background:#fff;
+    border:1px solid #E4E6EA;
+    border-radius:10px;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    min-height:0;
+    }
+
+    .table-toolbar{display:flex;align-items:center;justify-content:space-between;padding:.7rem 1.2rem;border-bottom:1px solid #E4E6EA;gap:10px;flex-wrap:wrap}
+    .table-toolbar span{font-size:13px;color:#888}
+    /*.table-wrap{ overflow-y:auto;overflow-x:auto;max-height:60vh}*/
+
+   .table-wrap{
+    height:60vh;
+    min-height:0;
+    overflow-y:auto;
+    overflow-x:auto;
+    position:relative;
+    }
+    
+    
+    table{
+      width:100%;
+      border-collapse:collapse;
+      font-size:12.5px;
+      min-width:600px;
+      margin:0;
+    }
+
+    thead th{
+      position:sticky;
+      top:0;
+      z-index:2;
+      padding:.55rem .9rem;
+      text-align:left;
+      font-weight:600;
+      font-size:11.5px;
+      color:#666;
+      background:#FAFAFA;
+      border-bottom:1px solid #E4E6EA;
+      white-space:nowrap
+    }
+
+    tbody td{padding:.55rem .9rem;border-bottom:1px solid #F0F1F3;color:#1a1a1a;white-space:nowrap}
+    tbody tr:last-child td{border-bottom:none}
+    tbody tr:hover td{background:#FFF8F4}
+    .badge{display:inline-block;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600}
+    .badge-f{background:#E6F1FB;color:#0C447C}
+    .badge-m{background:#FFF0E6;color:#C4520A}
+    .state-msg{text-align:center;padding:2.5rem 1rem;color:#aaa;font-size:14px}
+    .state-msg .icon{font-size:32px;margin-bottom:8px}
+
+    .table-footer{display:flex;align-items:center;justify-content:space-between;padding:.7rem 1.2rem;border-top:1px solid #E4E6EA;background:#FAFAFA;flex-wrap:wrap;gap:8px}
+    .table-footer-info{font-size:12px;color:#888}
+
+    /* ── Paginação ── */
+    .pagination{display:flex;align-items:center;gap:5px}
+    .page-btn{padding:4px 10px;border-radius:6px;border:1px solid #E4E6EA;background:#fff;font-size:12.5px;cursor:pointer;color:#374151}
+    .page-btn:hover{background:#F4F5F7}
+    .page-btn.active{background:#E8650A;color:#fff;border-color:#E8650A}
+    .page-btn:disabled{opacity:.4;cursor:default}
+  </style>
+</head>
+<body>
+
+<!-- ══════════ SIDEBAR ══════════ -->
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-box">🦐</div>
+    <div>
+      <div class="logo-text">Cammarada</div>
+      <div class="logo-sub">Banco de dados</div>
+    </div>
+  </div>
+  <div class="sidebar-section">Navegação</div>
+  <div class="nav-item active">📋 Tabelas simples</div>
+  <div class="nav-item" onclick="location.href='consulta.html'">🔀 Consulta cruzada</div>
+  <div class="nav-item" onclick="location.href='comparacao.html'">⚖️ Comparar dados</div>
+  <div class="sidebar-footer">
+    <div class="nav-item" style="color:#aaa;font-size:12px">ℹ️ Cammarada v1.0</div>
+  </div>
+</nav>
+
+<!-- ══════════ MAIN ══════════ -->
+<div class="main">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">Tabelas Simples</div>
+      <div class="topbar-sub">Explore, filtre e exporte dados de uma tabela por vez</div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-outline" onclick="limparFiltros()">↺ Limpar filtros</button>
+      <button class="btn" id="btn-exportar" onclick="exportarCSV()" disabled>⬇️ Exportar página atual</button>
+      <button class="btn btn-primary" id="btn-exportar-completo" onclick="exportarCSVCompleto()">⬇️ Exportar CSV completo</button>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- ══ Selecionar tabela ══ -->
+    <div class="section-card">
+      <div class="section-title">
+        Selecione uma tabela
+      </div>
+      <div class="tabelas-grid" id="tabelas-grid"></div>
+    </div>
+
+    <!-- ══ Filtros ══ -->
+    <div class="section-card">
+      <div class="section-title">Filtros <span class="tag">Opcionais</span></div>
+      <div class="filtros-row">
+        <div class="filter-group" data-filtro="state">
+          <span class="filter-label">Estado</span>
+          <select id="f-state">
+            <option value="">Todos os estados</option>
+            <option value="AC">Acre</option>
+            <option value="AL">Alagoas</option>
+            <option value="AP">Amapá</option>
+            <option value="AM">Amazonas</option>
+            <option value="BA">Bahia</option>
+            <option value="CE">Ceará</option>
+            <option value="DF">Distrito Federal</option>
+            <option value="ES">Espírito Santo</option>
+            <option value="GO">Goiás</option>
+            <option value="MA">Maranhão</option>
+            <option value="MT">Mato Grosso</option>
+            <option value="MS">Mato Grosso do Sul</option>
+            <option value="MG">Minas Gerais</option>
+            <option value="PA">Pará</option>
+            <option value="PB">Paraíba</option>
+            <option value="PR">Paraná</option>
+            <option value="PE">Pernambuco</option>
+            <option value="PI">Piauí</option>
+            <option value="RJ">Rio de Janeiro</option>
+            <option value="RN">Rio Grande do Norte</option>
+            <option value="RS">Rio Grande do Sul</option>
+            <option value="RO">Rondônia</option>
+            <option value="RR">Roraima</option>
+            <option value="SC">Santa Catarina</option>
+            <option value="SP">São Paulo</option>
+            <option value="SE">Sergipe</option>
+            <option value="TO">Tocantins</option>
+          </select>
+        </div>
+        <div class="filter-group" data-filtro="area">
+          <span class="filter-label">Área</span>
+          <input type="text" id="f-area" placeholder="ex: bfo">
+        </div>
+        <div class="filter-group" data-filtro="specie">
+          <span class="filter-label">Espécie</span>
+          <input type="text" id="f-specie" placeholder="ex: Xiphopenaeus">
+        </div>
+        <div class="filter-group" data-filtro="sex">
+          <span class="filter-label">Sexo</span>
+          <select id="f-sex">
+            <option value="">Todos</option>
+            <option value="F">Fêmea (F)</option>
+            <option value="M">Macho (M)</option>
+          </select>
+        </div>
+        <div class="filter-group" data-filtro="ano">
+          <span class="filter-label">Ano</span>
+          <input type="number" id="f-ano" placeholder="ex: 2020" min="1900" max="2100">
+        </div>
+        <div class="filter-group" data-filtro="data_ini">
+          <span class="filter-label">Data inicial</span>
+          <input type="date" id="f-data-ini">
+        </div>
+        <div class="filter-group" data-filtro="data_fim">
+          <span class="filter-label">Data final</span>
+          <input type="date" id="f-data-fim">
+        </div>
+        <div class="filter-group">
+          <span class="filter-label">Linhas por página</span>
+          <select id="sel-limit">
+            <option value="50">50</option>
+            <option value="100" selected>100</option>
+            <option value="500">500</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-top:1rem">
+        <button class="btn btn-primary" onclick="buscar(0)">🔍 Aplicar filtros</button>
+      </div>
+    </div>
+
+    <!-- ══ Resultado ══ -->
+    <div class="result-stats" id="result-stats"></div>
+
+    <div class="table-card">
+      <div class="table-toolbar">
+        <span id="table-sub-info">Selecione filtros e clique em Aplicar</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead id="table-head"></thead>
+          <tbody id="table-body">
+            <tr><td colspan="20">
+              <div class="state-msg">
+                <div class="icon">🔍</div>
+                Selecione uma tabela e clique em Aplicar filtros
+              </div>
+            </td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="table-footer">
+        <div class="table-footer-info" id="footer-info">Aguardando consulta...</div>
+        <div class="pagination" id="pagination"></div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<script>
+// ─────────────────────────────────────
+// CONFIGURAÇÃO
+// ─────────────────────────────────────
+
+const API_URL = 'http://localhost:8000';
+
+// Todas as tabelas disponíveis para navegação simples
+const TABELAS_CONFIG = {
+  // ── Grupo rg_geral ──
+  shrimp: {
+    icon: '🦐', nome: 'Shrimp',
+    desc: 'Dados biométricos de camarão'
+  },
+  bycatch: {
+    icon: '🐟', nome: 'Bycatch',
+    desc: 'Fauna acompanhante capturada'
+  },
+  'parametros-captura': {
+    icon: '🎣', nome: 'Parâm. Captura',
+    desc: 'Esforço e biomassa por arrasto'
+  },
+  'parametros-abioticos': {
+    icon: '🌡️', nome: 'Parâm. Abióticos',
+    desc: 'Temperatura, salinidade, pH...'
+  },
+  coleta: {
+    icon: '📋', nome: 'Coleta',
+    desc: 'Registros de saídas de campo'
+  },
+  social: {
+    icon: '👥', nome: 'Social',
+    desc: 'Dados socioeconômicos'
+  },
+  // ── Grupo id_sp ──
+  'captura-mpa': {
+    icon: '📊', nome: 'Captura MPA',
+    desc: 'Capturas por espécie e região'
+  },
+  'historia-vida-shrimp': {
+    icon: '📈', nome: 'Hist. Vida Shrimp',
+    desc: 'Parâmetros de história de vida'
+  },
+  'historia-vida-bycatch': {
+    icon: '📉', nome: 'Hist. Vida Bycatch',
+    desc: 'História de vida da fauna acomp.'
+  },
+  species: {
+    icon: '🔬', nome: 'Species',
+    desc: 'Dicionário de espécies'
+  }
+};
+
+// Mapeamento de filtros da UI → parâmetro real aceito por cada rota
+// Tabelas sem determinado filtro simplesmente não incluem a chave
+const FILTROS_MAP = {
+  'shrimp':                { state:'state_sigla', area:'area', specie:'specie', sex:'sex', data_ini:'data_ini', data_fim:'data_fim' },
+  'bycatch':               { state:'state_sigla', area:'area', specie:'specie', sex:'sex', data_ini:'data_ini', data_fim:'data_fim' },
+  'parametros-captura':    { state:'state_sigla', area:'area', data_ini:'data_ini', data_fim:'data_fim' },
+  'parametros-abioticos':  { state:'state_sigla', area:'area', data_ini:'data_ini', data_fim:'data_fim' },
+  'coleta':                { state:'state_sigla', area:'area', data_ini:'data_ini', data_fim:'data_fim' },
+  'social':                { state:'state_sigla', area:'area', data_ini:'data_ini', data_fim:'data_fim' },
+  'captura-mpa':           { state:'estado', specie:'taxon', ano:'ano' },
+  'historia-vida-shrimp':  { state:'estado', specie:'specie' },
+  'historia-vida-bycatch': { state:'estado', specie:'specie' },
+  'species':               { specie:'specie' }
+};
+
+// Converte sigla → nome completo do estado (usado em tabelas que recebem nome completo)
+const SIGLA_PARA_NOME = {
+  AC:'Acre', AL:'Alagoas', AP:'Amapá', AM:'Amazonas', BA:'Bahia', CE:'Ceará',
+  DF:'Distrito Federal', ES:'Espírito Santo', GO:'Goiás', MA:'Maranhão',
+  MT:'Mato Grosso', MS:'Mato Grosso do Sul', MG:'Minas Gerais', PA:'Pará',
+  PB:'Paraíba', PR:'Paraná', PE:'Pernambuco', PI:'Piauí', RJ:'Rio de Janeiro',
+  RN:'Rio Grande do Norte', RS:'Rio Grande do Sul', RO:'Rondônia', RR:'Roraima',
+  SC:'Santa Catarina', SP:'São Paulo', SE:'Sergipe', TO:'Tocantins'
+};
+
+// Tabelas que recebem nome completo do estado (não sigla)
+const ESTADO_NOME_COMPLETO = new Set(['captura-mpa', 'historia-vida-shrimp', 'historia-vida-bycatch']);
+
+let tabelaAtiva = 'shrimp';
+let paginaAtual = 0;
+let dadosAtuais = [];
+
+// ─────────────────────────────────────
+// RENDERIZAR CARDS DE TABELA
+// ─────────────────────────────────────
+
+function renderizarCards() {
+  const grid = document.getElementById('tabelas-grid');
+  grid.innerHTML = Object.entries(TABELAS_CONFIG).map(([key, cfg]) => `
+    <div class="tabela-card ${key === tabelaAtiva ? 'selected' : ''}" id="card-${key}" onclick="selecionarTabela('${key}')">
+      <div class="tc-icon">${cfg.icon}</div>
+      <div class="tc-nome">${cfg.nome}</div>
+      <div class="tc-desc">${cfg.desc}</div>
+    </div>
+  `).join('');
+}
+
+function selecionarTabela(key) {
+  tabelaAtiva = key;
+  paginaAtual = 0;
+  document.querySelectorAll('.tabela-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById(`card-${key}`).classList.add('selected');
+
+  atualizarFiltrosVisiveis();
+
+  document.getElementById('table-sub-info').textContent = 'Clique em Aplicar filtros para carregar';
+  document.getElementById('table-head').innerHTML = '';
+  document.getElementById('table-body').innerHTML = `
+    <tr><td colspan="20">
+      <div class="state-msg"><div class="icon">🔍</div>Clique em Aplicar filtros para carregar os dados</div>
+    </td></tr>`;
+  document.getElementById('footer-info').textContent = 'Aguardando consulta...';
+  document.getElementById('pagination').innerHTML = '';
+  document.getElementById('result-stats').innerHTML = '';
+  document.getElementById('btn-exportar').disabled = true;
+  dadosAtuais = [];
+}
+
+// Mostra/esconde campos de filtro de acordo com o que cada tabela suporta
+function atualizarFiltrosVisiveis() {
+  const map = FILTROS_MAP[tabelaAtiva] || {};
+  document.querySelectorAll('.filter-group[data-filtro]').forEach(grupo => {
+    const chave = grupo.dataset.filtro;
+    grupo.classList.toggle('hidden', !map[chave]);
+  });
+}
+
+// Monta os parâmetros de filtro já com os nomes corretos para cada rota
+function montarParamsFiltro() {
+  const params = new URLSearchParams();
+  const map    = FILTROS_MAP[tabelaAtiva] || {};
+
+  const state  = document.getElementById('f-state').value;
+  const area   = document.getElementById('f-area').value.trim();
+  const specie = document.getElementById('f-specie').value.trim();
+  const sex    = document.getElementById('f-sex').value;
+  const ano    = document.getElementById('f-ano').value.trim();
+  const dini   = document.getElementById('f-data-ini').value;
+  const dfim   = document.getElementById('f-data-fim').value;
+
+  if (state && map.state) {
+    // Tabelas que esperam nome completo recebem o nome; demais recebem a sigla
+    const valor = ESTADO_NOME_COMPLETO.has(tabelaAtiva)
+      ? (SIGLA_PARA_NOME[state] || state)
+      : state;
+    params.append(map.state, valor);
+  }
+  if (area   && map.area)     params.append(map.area, area);
+  if (specie && map.specie)   params.append(map.specie, specie);
+  if (sex    && map.sex)      params.append(map.sex, sex);
+  if (ano    && map.ano)      params.append(map.ano, ano);
+  if (dini   && map.data_ini) params.append(map.data_ini, dini);
+  if (dfim   && map.data_fim) params.append(map.data_fim, dfim);
+
+  return params;
+}
+
+// ─────────────────────────────────────
+// BUSCAR DADOS
+// ─────────────────────────────────────
+
+async function buscar(pagina = 0) {
+  paginaAtual = pagina;
+  const limit  = parseInt(document.getElementById('sel-limit').value);
+  const params = montarParamsFiltro();
+  params.set('skip', pagina * limit);
+  params.set('limit', limit);
+
+  document.getElementById('table-body').innerHTML = `
+    <tr><td colspan="20">
+      <div class="state-msg"><div class="icon">⏳</div>Carregando dados...</div>
+    </td></tr>`;
+  document.getElementById('result-stats').innerHTML = '';
+
+  try {
+    const resp = await fetch(`${API_URL}/${tabelaAtiva}/?${params}`);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const dados = await resp.json();
+    dadosAtuais = dados;
+    renderizarResultado(dados, limit);
+  } catch (err) {
+    document.getElementById('table-body').innerHTML = `
+      <tr><td colspan="20">
+        <div class="state-msg">
+          <div class="icon">❌</div>
+          Erro: ${err.message}<br>
+          <small>Verifique se a API está em ${API_URL}</small>
+        </div>
+      </td></tr>`;
+    document.getElementById('footer-info').textContent = 'Erro na consulta';
+  }
+}
+
+// ─────────────────────────────────────
+// RENDERIZAR RESULTADO
+// ─────────────────────────────────────
+
+function renderizarResultado(dados, limit) {
+  const cfg = TABELAS_CONFIG[tabelaAtiva];
+
+  document.getElementById('result-stats').innerHTML = `
+    <div class="stat-pill"><strong>${dados.length}</strong> registros nesta página</div>
+    <div class="stat-pill blue"><strong>${cfg.nome}</strong> tabela ativa</div>
+  `;
+
+  if (!dados || dados.length === 0) {
+    document.getElementById('table-head').innerHTML = '';
+    document.getElementById('table-body').innerHTML = `
+      <tr><td colspan="20">
+        <div class="state-msg"><div class="icon">📭</div>Nenhum registro encontrado.</div>
+      </td></tr>`;
+    document.getElementById('footer-info').textContent = '0 registros encontrados';
+    document.getElementById('table-sub-info').textContent = 'Nenhum resultado';
+    document.getElementById('pagination').innerHTML = '';
+    document.getElementById('btn-exportar').disabled = true;
+    return;
+  }
+
+  const chaves = Object.keys(dados[0]);
+
+  // Cabeçalho
+  document.getElementById('table-head').innerHTML =
+    '<tr>' + chaves.map(c => `<th>${c}</th>`).join('') + '</tr>';
+
+  // Linhas
+  document.getElementById('table-body').innerHTML = dados.map(row =>
+    '<tr>' + chaves.map(col => {
+      let val = row[col];
+      if (val === null || val === undefined) return '<td style="color:#ccc">—</td>';
+      if (col === 'sex') {
+        if (val === 'F') return `<td><span class="badge badge-f">F</span></td>`;
+        if (val === 'M') return `<td><span class="badge badge-m">M</span></td>`;
+      }
+      if (col === 'specie' || col === 'taxon') return `<td><i>${val}</i></td>`;
+      return `<td>${val}</td>`;
+    }).join('') + '</tr>'
+  ).join('');
+
+  const ini = paginaAtual * limit + 1;
+  const fim = ini + dados.length - 1;
+  document.getElementById('footer-info').textContent =
+    `Última atualização: ${new Date().toLocaleString('pt-BR')} — Mostrando ${ini}–${fim}`;
+  document.getElementById('table-sub-info').textContent = `Mostrando ${dados.length} registros`;
+
+  // Paginação
+  const pag     = document.getElementById('pagination');
+  const temProx = dados.length === limit;
+  pag.innerHTML = `
+    <span style="font-size:12.5px;color:#888;margin-right:6px">Página ${paginaAtual + 1}</span>
+    <button class="page-btn" onclick="buscar(${paginaAtual - 1})" ${paginaAtual === 0 ? 'disabled' : ''}>←</button>
+    <button class="page-btn active">${paginaAtual + 1}</button>
+    <button class="page-btn" onclick="buscar(${paginaAtual + 1})" ${!temProx ? 'disabled' : ''}>→</button>
+  `;
+
+  document.getElementById('btn-exportar').disabled = false;
+}
+
+// ─────────────────────────────────────
+// LIMPAR FILTROS
+// ─────────────────────────────────────
+
+function limparFiltros() {
+  ['f-state','f-area','f-specie','f-sex','f-ano','f-data-ini','f-data-fim']
+    .forEach(id => { document.getElementById(id).value = ''; });
+}
+
+// ─────────────────────────────────────
+// EXPORTAR CSV
+// ─────────────────────────────────────
+
+function gerarEBaixarCSV(dados, nomeArquivo) {
+  const cols = Object.keys(dados[0]);
+  const csv  = '\uFEFF' + [
+    cols.join(';'),
+    ...dados.map(r => cols.map(c => {
+      let v = r[c] ?? '';
+      v = String(v).replace(/"/g, '""');
+      return v.includes(';') ? `"${v}"` : v;
+    }).join(';'))
+  ].join('\n');
+  const link    = document.createElement('a');
+  link.href     = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+  link.download = `${nomeArquivo}_${new Date().toISOString().split('T')[0]}.csv`;
+  link.click();
+}
+
+function exportarCSV() {
+  if (!dadosAtuais || dadosAtuais.length === 0) {
+    alert('Faça uma busca antes de exportar.');
+    return;
+  }
+  gerarEBaixarCSV(dadosAtuais, `cammarada_${tabelaAtiva}`);
+}
+
+async function exportarCSVCompleto() {
+  const btn           = document.getElementById('btn-exportar-completo');
+  const textoOriginal = btn.textContent;
+  const TAMANHO_LOTE  = 2000;
+  const MAX_REGISTROS = 300000;
+
+  btn.disabled = true;
+  document.getElementById('btn-exportar').disabled = true;
+
+  const params = montarParamsFiltro();
+  let skip         = 0;
+  let todosOsDados = [];
+
+  try {
+    while (true) {
+      const p = new URLSearchParams(params);
+      p.set('skip', skip);
+      p.set('limit', TAMANHO_LOTE);
+
+      btn.textContent = `⏳ Baixando... ${todosOsDados.length} registros`;
+
+      const resp = await fetch(`${API_URL}/${tabelaAtiva}/?${p}`);
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const lote = await resp.json();
+
+      todosOsDados = todosOsDados.concat(lote);
+
+      if (lote.length < TAMANHO_LOTE) break;
+      skip += TAMANHO_LOTE;
+      if (skip >= MAX_REGISTROS) break;
+    }
+
+    if (todosOsDados.length === 0) {
+      alert('Nenhum registro encontrado para exportar com os filtros atuais.');
+      return;
+    }
+    gerarEBaixarCSV(todosOsDados, `cammarada_${tabelaAtiva}_completo`);
+  } catch (err) {
+    alert('Erro ao exportar o CSV completo: ' + err.message);
+  } finally {
+    btn.disabled    = false;
+    btn.textContent = textoOriginal;
+    document.getElementById('btn-exportar').disabled = (!dadosAtuais || dadosAtuais.length === 0);
+  }
+}
+
+// ─────────────────────────────────────
+// INICIALIZAÇÃO
+// ─────────────────────────────────────
+
+renderizarCards();
+atualizarFiltrosVisiveis();
+</script>
+</body>
+</html>

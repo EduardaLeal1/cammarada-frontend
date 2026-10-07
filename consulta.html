@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cammarada — Consulta Cruzada</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Segoe UI',Arial,sans-serif;background:#F4F5F7;color:#1a1a1a;display:flex;height:100vh;overflow:hidden}
+
+    /* ── Sidebar ── */
+    .sidebar{width:220px;min-width:220px;background:#fff;border-right:1px solid #E4E6EA;display:flex;flex-direction:column}
+    .sidebar-logo{display:flex;align-items:center;gap:10px;padding:1.1rem 1rem;border-bottom:1px solid #E4E6EA}
+    .logo-box{width:34px;height:34px;background:#E8650A;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px}
+    .logo-text{font-size:15px;font-weight:600}
+    .logo-sub{font-size:11px;color:#888;margin-top:1px}
+    .sidebar-section{font-size:10.5px;font-weight:600;color:#aaa;text-transform:uppercase;letter-spacing:.06em;padding:1rem 1rem .4rem}
+    .nav-item{display:flex;align-items:center;gap:9px;padding:.48rem .75rem;margin:2px .5rem;border-radius:7px;cursor:pointer;font: size 13.5px;color:#555;transition:background .12s}
+    .nav-item:hover{background:#F4F5F7;color:#1a1a1a}
+    .nav-item.active{background:#FFF0E6;color:#C4520A;font-weight:500}
+    .sidebar-footer{margin-top:auto;border-top:1px solid #E4E6EA;padding:.6rem .5rem}
+
+    /* ── Main ── */
+    .main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+    .topbar{background:#fff;border-bottom:1px solid #E4E6EA;padding:.85rem 1.5rem;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+    .topbar-title{font-size:16px;font-weight:600}
+    .topbar-sub{font-size:12.5px;color:#888;margin-top:2px}
+
+    /* ── Botões ── */
+    .btn{display:inline-flex;align-items:center;gap:6px;padding:.42rem .9rem;border-radius:7px;font-size:13px;cursor:pointer;border:1px solid #D0D3D9;background:#fff;color:#333;transition:background .12s}
+    .btn:hover{background:#F4F5F7}
+    .btn-primary{background:#E8650A;color:#fff;border-color:#E8650A}
+    .btn-primary:hover{background:#cf5808}
+    .btn-outline{border-color:#185FA5;color:#185FA5}
+    .btn-outline:hover{background:#E6F1FB}
+    .btn:disabled{opacity:.4;cursor:default}
+
+    /* ── Layout em etapas ── */
+    .content{flex:1;overflow-y:auto;padding:1.2rem 1.5rem;display:flex;flex-direction:column;gap:1rem}
+
+    /* ── Stepper ── */
+    .stepper{display:flex;align-items:center;gap:0;margin-bottom:.5rem}
+    .step{display:flex;align-items:center;gap:8px;font-size:13px;color:#aaa}
+    .step.active{color:#E8650A;font-weight:600}
+    .step.done{color:#185FA5}
+    .step-num{width:24px;height:24px;border-radius:50%;border:2px solid #D0D3D9;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0}
+    .step.active .step-num{border-color:#E8650A;background:#FFF0E6;color:#E8650A}
+    .step.done .step-num{border-color:#185FA5;background:#185FA5;color:#fff}
+    .step-divider{flex:1;height:2px;background:#E4E6EA;margin:0 8px;max-width:60px}
+    .step.done + .step-divider{background:#185FA5}
+
+    /* ── Cards de tabela para seleção ── */
+    .tabelas-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+    .tabela-card{border:2px solid #E4E6EA;border-radius:10px;padding:.85rem 1rem;cursor:pointer;transition:all .15s;background:#fff;user-select:none}
+    .tabela-card:hover{border-color:#E8650A;background:#FFF8F4}
+    .tabela-card.selected{border-color:#E8650A;background:#FFF0E6}
+    .tabela-card .tc-icon{font-size:22px;margin-bottom:6px}
+    .tabela-card .tc-nome{font-size:13.5px;font-weight:600;color:#1a1a1a}
+    .tabela-card .tc-desc{font-size:11.5px;color:#888;margin-top:3px;line-height:1.4}
+    .tabela-card .tc-chave{font-size:10.5px;color:#185FA5;margin-top:6px;font-weight:500}
+    .tabela-card.selected .tc-nome{color:#C4520A}
+
+    /* ── Seção de colunas ── */
+    .section-card{background:#fff;border:1px solid #E4E6EA;border-radius:10px;padding:1rem 1.2rem}
+    .section-title{font-size:14px;font-weight:600;margin-bottom:.75rem;display:flex;align-items:center;gap:8px}
+    .section-title .tag{font-size:11px;background:#FFF0E6;color:#E8650A;border-radius:99px;padding:2px 8px;font-weight:500}
+    .section-title .tag-blue{background:#E6F1FB;color:#185FA5}
+
+    /* ── Colunas checkboxes ── */
+    .tabela-bloco{margin-bottom:1rem}
+    .tabela-bloco:last-child{margin-bottom:0}
+    .bloco-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem}
+    .bloco-nome{font-size:13px;font-weight:600;color:#1a1a1a;display:flex;align-items:center;gap:6px}
+    .bloco-nome span{font-size:18px}
+    .bloco-actions{display:flex;gap:6px}
+    .link-btn{font-size:12px;color:#185FA5;cursor:pointer;text-decoration:underline;background:none;border:none}
+    .colunas-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:6px}
+    .col-check{display:flex;align-items:center;gap:7px;padding:5px 8px;border-radius:6px;cursor:pointer;font-size:12.5px;color:#333;transition:background .1s;border:1px solid transparent}
+    .col-check:hover{background:#F4F5F7}
+    .col-check input[type=checkbox]{accent-color:#E8650A;width:14px;height:14px;flex-shrink:0}
+    .col-check.checked{background:#FFF8F4;border-color:#FDDCBF}
+
+    /* ── Filtros globais ── */
+    .filtros-row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}
+    .filter-group{display:flex;flex-direction:column;gap:4px}
+    .filter-label{font-size:12px;color:#666;font-weight:500}
+    .filter-group select,.filter-group input{height:34px;padding:0 10px;border-radius:7px;border:1px solid #D0D3D9;background:#fff;color:#1a1a1a;font-size:13px;min-width:140px;outline:none}
+    .filter-group select:focus,.filter-group input:focus{border-color:#E8650A}
+
+    /* ── Resultado ── */
+    .result-stats{display:flex;gap:10px;flex-wrap:wrap}
+    .stat-pill{background:#fff;border:1px solid #E4E6EA;border-radius:8px;padding:.5rem .9rem;font-size:13px}
+    .stat-pill strong{color:#E8650A}
+    .stat-pill.blue strong{color:#185FA5}
+
+    .table-card{background:#fff;border:1px solid #E4E6EA;border-radius:10px;overflow:hidden}
+    .table-toolbar{display:flex;align-items:center;justify-content:space-between;padding:.7rem 1.2rem;border-bottom:1px solid #E4E6EA}
+    .table-toolbar span{font-size:13px;color:#888}
+    .table-wrap{overflow-x:auto}
+    table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:600px}
+    thead th{padding:.55rem .9rem;text-align:left;font-weight:600;font-size:11.5px;color:#666;background:#FAFAFA;border-bottom:1px solid #E4E6EA;white-space:nowrap}
+    thead th .th-tabela{font-size:10px;color:#E8650A;display:block;font-weight:400}
+    tbody td{padding:.55rem .9rem;border-bottom:1px solid #F0F1F3;color:#1a1a1a;white-space:nowrap}
+    tbody tr:last-child td{border-bottom:none}
+    tbody tr:hover td{background:#FFF8F4}
+    .badge{display:inline-block;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600}
+    .badge-f{background:#E6F1FB;color:#0C447C}
+    .badge-m{background:#FFF0E6;color:#C4520A}
+    .state-msg{text-align:center;padding:2.5rem 1rem;color:#aaa;font-size:14px}
+    .state-msg .icon{font-size:32px;margin-bottom:8px}
+
+    /* ── Aviso de compatibilidade ── */
+    .compat-warn{background:#FFF8E6;border:1px solid #FFD980;border-radius:8px;padding:.6rem 1rem;font-size:12.5px;color:#7A5500;display:none}
+    .compat-warn.show{display:block}
+  </style>
+</head>
+<body>
+
+<!-- ══════════ SIDEBAR ══════════ -->
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-box">🦐</div>
+    <div>
+      <div class="logo-text">Cammarada</div>
+      <div class="logo-sub">Banco de dados</div>
+    </div>
+  </div>
+  <div class="sidebar-section">Navegação</div>
+  <div class="nav-item" onclick="location.href='index.html'">📋 Tabelas simples</div>
+  <div class="nav-item active">🔀 Consulta cruzada</div>
+  <div class="nav-item" onclick="location.href='comparacao.html'">⚖️ Comparar dados</div>
+  <div class="sidebar-footer">
+    <div class="nav-item" style="color:#aaa;font-size:12px">ℹ️ Cammarada v1.0</div>
+  </div>
+</nav>
+
+<!-- ══════════ MAIN ══════════ -->
+<div class="main">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">Consulta Cruzada</div>
+      <div class="topbar-sub">Monte sua própria tabela cruzando dados de múltiplas fontes</div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-outline" onclick="resetar()">↺ Resetar</button>
+      <button class="btn btn-primary" id="btn-exportar" onclick="exportarCSV()" disabled>⬇️ Exportar CSV Completo</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- Stepper -->
+    <div class="stepper">
+      <div class="step active" id="step1-indicator">
+        <div class="step-num">1</div> Selecionar tabelas
+      </div>
+      <div class="step-divider" id="div1"></div>
+      <div class="step" id="step2-indicator">
+        <div class="step-num">2</div> Escolher colunas
+      </div>
+      <div class="step-divider" id="div2"></div>
+      <div class="step" id="step3-indicator">
+        <div class="step-num">3</div> Filtros e resultado
+      </div>
+    </div>
+
+    <!-- ══ ETAPA 1: Selecionar tabelas ══ -->
+    <div id="etapa1">
+      <div class="section-card">
+        <div class="section-title">
+          Quais tabelas você quer cruzar?
+          <span class="tag">Selecione 2 ou mais</span>
+        </div>
+        <div class="tabelas-grid" id="tabelas-grid"></div>
+        <div class="compat-warn" id="compat-warn">
+          ⚠️ Atenção: algumas tabelas selecionadas se ligam por <strong>rg_geral</strong> e outras por <strong>id_sp</strong>. O sistema fará o melhor JOIN possível, mas alguns campos podem ficar vazios onde não há correspondência.
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-top:1rem">
+          <button class="btn btn-primary" id="btn-prox1" onclick="irEtapa2()" disabled>
+            Próximo: escolher colunas →
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ ETAPA 2: Escolher colunas ══ -->
+    <div id="etapa2" style="display:none">
+      <div class="section-card">
+        <div class="section-title">
+          Quais colunas incluir na tabela final?
+          <span class="tag tag-blue">Marque as que deseja</span>
+        </div>
+        <div id="colunas-container"></div>
+        <div style="display:flex;justify-content:space-between;margin-top:1rem">
+          <button class="btn" onclick="irEtapa1()">← Voltar</button>
+          <button class="btn btn-primary" id="btn-prox2" onclick="irEtapa3()" disabled>
+            Próximo: filtros e resultado →
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ ETAPA 3: Filtros + resultado ══ -->
+    <div id="etapa3" style="display:none">
+
+      <!-- Filtros globais -->
+      <div class="section-card">
+        <div class="section-title">Filtros globais <span class="tag">Opcionais</span></div>
+        <div class="filtros-row">
+          <div class="filter-group">
+            <span class="filter-label">Estado (sigla)</span>
+            <input type="text" id="f-state" placeholder="ex: PE">
+          </div>
+          <div class="filter-group">
+            <span class="filter-label">Área</span>
+            <input type="text" id="f-area" placeholder="ex: bfo">
+          </div>
+          <div class="filter-group">
+            <span class="filter-label">Data inicial</span>
+            <input type="date" id="f-data-ini">
+          </div>
+          <div class="filter-group">
+            <span class="filter-label">Data final</span>
+            <input type="date" id="f-data-fim">
+          </div>
+          <div class="filter-group">
+            <span class="filter-label">Espécie (id_sp)</span>
+            <input type="text" id="f-idsp" placeholder="ex: xip.kro">
+          </div>
+          <div class="filter-group">
+            <span class="filter-label">Limite de registros</span>
+            <select id="f-limit">
+              <option value="100">100</option>
+              <option value="500" selected>500</option>
+              <option value="1000">1000</option>
+              <option value="5000">5000</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:1rem;align-items:center">
+          <button class="btn" onclick="irEtapa2()">← Voltar</button>
+          <button class="btn btn-primary" onclick="executarConsulta()">🔍 Executar consulta</button>
+        </div>
+      </div>
+
+      <!-- Resultado -->
+      <div id="resultado-area" style="display:none">
+        <div class="result-stats" id="result-stats"></div>
+        <div class="table-card" style="margin-top:.75rem">
+          <div class="table-toolbar">
+            <span id="result-info">—</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead id="result-thead"></thead>
+              <tbody id="result-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /etapa3 -->
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<script>
+// ─────────────────────────────────────
+// CONFIGURAÇÃO
+// ─────────────────────────────────────
+
+// URL da API
+const API_URL = 'http://localhost:8000';
+
+// Define cada tabela disponível para cruzamento
+const TABELAS_CONFIG = {
+  Shrimp: {
+    icon: '🦐', nome: 'Shrimp',
+    desc: 'Dados biométricos de camarão',
+    chave: 'rg_geral + id_sp',
+    colunas: [
+      'id_shrimp','rg_geral','rg_ind','data_shrimp','state_sigla','state_nome',
+      'pais','area','mud','set_num','specie','id_sp','lat_ini','long_ini',
+      'lat_fin','long_fin','reg','tl','cl','tw','sex','mat','pet_state','obs'
+    ]
+  },
+  Bycatch: {
+    icon: '🐟', nome: 'Bycatch',
+    desc: 'Fauna acompanhante capturada',
+    chave: 'rg_geral + id_sp',
+    colunas: [
+      'id_bycatch','rg_geral','rg_ind','data_bycatch','state_sigla','state_nome',
+      'pais','area','mud','set_num','specie','id_sp','lat_ini','long_ini',
+      'lat_fin','long_fin','reg','tl','fl','sl','tw','ew','stomach_w',
+      'fullness','sex','gon_w','matur','stage','obs','obs_2','obs_3'
+    ]
+  },
+  ParametrosCaptura: {
+    icon: '🎣', nome: 'Parâm. Captura',
+    desc: 'Esforço e biomassa por arrasto',
+    chave: 'rg_geral',
+    colunas: [
+      'id_captura','rg_geral','data_captura','state_sigla','state_nome','pais',
+      'area_captura','mud_captura','set_num','lat_ini','long_ini','lat_fin','long_fin',
+      'covered_area_km2','time_captura','tw_fish_kg','tw_white_shrimp_kg',
+      'tw_pink_shrimp_kg','tw_seabob_kg','algae','porifera','cnidaria','annelida',
+      'mollusca','crustacea','equinodermata','outros','biomassa_total_invert_kg_km2_1',
+      'camarao','porifera_2','cnidaria_2','annelida_2','mollusca_2','crustacea_2',
+      'equinodermata_2','outros_2','biomassa_total_invertebrados_kg_km2_2','camarao_2',
+      'obs1','obs2','obs3'
+    ]
+  },
+  ParametrosAbioticos: {
+    icon: '🌡️', nome: 'Parâm. Abióticos',
+    desc: 'Temperatura, salinidade, pH...',
+    chave: 'rg_geral',
+    colunas: [
+      'id_abiotico','rg_geral','data_abioticos','state_sigla','state_nome','pais',
+      'area_abioticos','mud_abioticos','set_num','lat_ini','long_ini','lat_fin','long_fin',
+      'temp','ph','sal','o2','do2','conductv','conductv2','tide','depth_min','depth_max',
+      'chlorophylla','chlrf','turbidity','flow','rainfall','granulometry_sand',
+      'granulometry_fine_sand','granulometry_fine_sand_clay','granulometry_clay',
+      'oganic_matter','ftd','sand_ini','sand_end','silt_ini','silt_end','clay_ini',
+      'clay_end','average_grain_diameter_ini','average_grain_diameter_end',
+      'sorting_ini','sorting_ini_2','calcium_carbonate_ini','calcium_carbonate_end',
+      'carbonate_ini','carbonate_end','inorganic_carbon_ini','inorganic_carbon_end',
+      'c_total_ini','c_total_end','c_inorganic_ini','c_inorganic_end',
+      'c_organic_ini','c_organic_end','n_total_ini','n_total_end',
+      'ratio_c_n_ini','ratio_c_n_end','isotope_c_ini','isotope_c_end',
+      'isotope_n_ini','isotope_n_end','orp','voh',
+      'total_de_solidos_dissolvidos_percentual','obs'
+    ]
+  },
+  Coleta: {
+    icon: '📋', nome: 'Coleta',
+    desc: 'Registros de saídas de campo',
+    chave: 'rg_geral',
+    colunas: ['rg_geral','id_embarcacao','state_sigla','state_nome','pais','area','data_coleta']
+  },
+  Social: {
+    icon: '👥', nome: 'Social',
+    desc: 'Dados socioeconômicos',
+    chave: 'rg_geral',
+    colunas: [
+      'id_social','rg_geral','data_registro','state_social','area_social',
+      'specie','nome_popular','comercializacao','preco_kg','fonte_registro','obs'
+    ]
+  },
+  Captura_MPA: {
+    icon: '📊', nome: 'Captura MPA',
+    desc: 'Capturas por espécie e região',
+    chave: 'id_sp',
+    colunas: [
+      'id_mpa','regiao','estado','grande_grupo','filo_subfilo','classe','ordem',
+      'familia','ano','nome_comum','nome_comum_nacional_padronizado','taxon',
+      'id_sp','captura_t','setor','notas'
+    ]
+  },
+  Historia_vida_shrimp: {
+    icon: '📈', nome: 'Hist. Vida Shrimp',
+    desc: 'Parâmetros de história de vida',
+    chave: 'id_sp',
+    colunas: [
+      'id_hist_vida_shrimp','specie','id_sp','nome_comum','pais','estado',
+      'local_','ano_inicial','ano_final','linf_cl','linf_tl','k','t0','winf',
+      'wla','wlb','la','lb','l50_cl','l50_tl','sex','sl50_cl','sl50_tl',
+      't_max','f','m','z','lr_tl','lr_cl','p_rep_ini','p_rep_fin',
+      'rec_ini','rec_fin','met_mort','metodo','fonte'
+    ]
+  },
+  Historia_vida_bycatch: {
+    icon: '📉', nome: 'Hist. Vida Bycatch',
+    desc: 'História de vida da fauna acomp.',
+    chave: 'id_sp',
+    colunas: [
+      'id_hist_vida_bayc','specie','id_sp','nome_comum','pais','estado',
+      'local_','ano_inicial','ano_final','linf_cl','linf_tl','k','t0','winf',
+      'wla','wlb','la','lb','l50_cl','l50_tl','sex','sl50_cl','sl50_tl',
+      't_max','f','m','z','lr_tl','lr_cl','p_rep_ini','p_rep_fin',
+      'rec_ini','rec_fin','met_mort','metodo','fonte'
+    ]
+  },
+  Species: {
+    icon: '🔬', nome: 'Species',
+    desc: 'Dicionário de espécies',
+    chave: 'id_sp',
+    colunas: ['id_species','id_sp','specie','obs']
+  }
+};
+
+// ─────────────────────────────────────
+// ESTADO DA APLICAÇÃO
+// ─────────────────────────────────────
+
+let tabelasSelecionadas = new Set();   // tabelas marcadas na etapa 1
+let colunasSelcionadas  = {};          // { Shrimp: ['tl','tw'], ... }
+let dadosResultado      = [];          // dados retornados pela API
+
+// ─────────────────────────────────────
+// ETAPA 1 — renderizar cards de tabelas
+// ─────────────────────────────────────
+
+function renderizarCards() {
+  const grid = document.getElementById('tabelas-grid');
+  grid.innerHTML = Object.entries(TABELAS_CONFIG).map(([key, cfg]) => `
+    <div class="tabela-card" id="card-${key}" onclick="toggleTabela('${key}')">
+      <div class="tc-icon">${cfg.icon}</div>
+      <div class="tc-nome">${cfg.nome}</div>
+      <div class="tc-desc">${cfg.desc}</div>
+      <div class="tc-chave">🔗 ${cfg.chave}</div>
+    </div>
+  `).join('');
+}
+
+// alterna seleção de uma tabela
+function toggleTabela(key) {
+  const card = document.getElementById(`card-${key}`);
+  if (tabelasSelecionadas.has(key)) {
+    tabelasSelecionadas.delete(key);
+    card.classList.remove('selected');
+  } else {
+    tabelasSelecionadas.add(key);
+    card.classList.add('selected');
+  }
+  // habilita botão próximo se 2+ tabelas selecionadas
+  document.getElementById('btn-prox1').disabled = tabelasSelecionadas.size < 2;
+  // verifica compatibilidade de chaves
+  verificarCompatibilidade();
+}
+
+// avisa se há mistura de chaves rg_geral e id_sp
+function verificarCompatibilidade() {
+  const temRgGeral = [...tabelasSelecionadas].some(t =>
+    TABELAS_CONFIG[t].chave.includes('rg_geral'));
+  const soIdSp = [...tabelasSelecionadas].every(t =>
+    TABELAS_CONFIG[t].chave === 'id_sp');
+  const warn = document.getElementById('compat-warn');
+  // exibe aviso só quando há mistura
+  warn.classList.toggle('show', temRgGeral && !soIdSp &&
+    [...tabelasSelecionadas].some(t => TABELAS_CONFIG[t].chave === 'id_sp'));
+}
+
+// ─────────────────────────────────────
+// ETAPA 2 — renderizar checkboxes de colunas
+// ─────────────────────────────────────
+
+function renderizarColunas() {
+  const container = document.getElementById('colunas-container');
+  // inicializa seleção de colunas para cada tabela
+  tabelasSelecionadas.forEach(t => {
+    if (!colunasSelcionadas[t]) colunasSelcionadas[t] = new Set();
+  });
+
+  container.innerHTML = [...tabelasSelecionadas].map(tabela => {
+    const cfg = TABELAS_CONFIG[tabela];
+    return `
+      <div class="tabela-bloco">
+        <div class="bloco-header">
+          <div class="bloco-nome">${cfg.icon} ${cfg.nome}</div>
+          <div class="bloco-actions">
+            <button class="link-btn" onclick="selecionarTodas('${tabela}')">Selecionar todas</button>
+            <button class="link-btn" onclick="limparTabela('${tabela}')">Limpar</button>
+          </div>
+        </div>
+        <div class="colunas-grid">
+          ${cfg.colunas.map(col => `
+            <label class="col-check ${colunasSelcionadas[tabela].has(col) ? 'checked' : ''}"
+                   id="label-${tabela}-${col}">
+              <input type="checkbox"
+                     ${colunasSelcionadas[tabela].has(col) ? 'checked' : ''}
+                     onchange="toggleColuna('${tabela}','${col}',this)">
+              ${col}
+            </label>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }).join('<hr style="border:none;border-top:1px solid #E4E6EA;margin:.75rem 0">');
+
+  atualizarBotaoEtapa2();
+}
+
+// marca/desmarca uma coluna
+function toggleColuna(tabela, col, checkbox) {
+  const label = document.getElementById(`label-${tabela}-${col}`);
+  if (checkbox.checked) {
+    colunasSelcionadas[tabela].add(col);
+    label.classList.add('checked');
+  } else {
+    colunasSelcionadas[tabela].delete(col);
+    label.classList.remove('checked');
+  }
+  atualizarBotaoEtapa2();
+}
+
+// habilita botão próximo se pelo menos 1 coluna selecionada
+function atualizarBotaoEtapa2() {
+  const total = [...tabelasSelecionadas]
+    .reduce((acc, t) => acc + (colunasSelcionadas[t]?.size || 0), 0);
+  document.getElementById('btn-prox2').disabled = total === 0;
+}
+
+// seleciona todas as colunas de uma tabela
+function selecionarTodas(tabela) {
+  TABELAS_CONFIG[tabela].colunas.forEach(col => {
+    colunasSelcionadas[tabela].add(col);
+    const cb = document.querySelector(`#label-${tabela}-${col} input`);
+    const lb = document.getElementById(`label-${tabela}-${col}`);
+    if (cb) cb.checked = true;
+    if (lb) lb.classList.add('checked');
+  });
+  atualizarBotaoEtapa2();
+}
+
+// limpa todas as colunas de uma tabela
+function limparTabela(tabela) {
+  colunasSelcionadas[tabela].clear();
+  TABELAS_CONFIG[tabela].colunas.forEach(col => {
+    const cb = document.querySelector(`#label-${tabela}-${col} input`);
+    const lb = document.getElementById(`label-${tabela}-${col}`);
+    if (cb) cb.checked = false;
+    if (lb) lb.classList.remove('checked');
+  });
+  atualizarBotaoEtapa2();
+}
+
+// ─────────────────────────────────────
+// NAVEGAÇÃO ENTRE ETAPAS
+// ─────────────────────────────────────
+
+function irEtapa1() {
+  document.getElementById('etapa1').style.display = 'block';
+  document.getElementById('etapa2').style.display = 'none';
+  document.getElementById('etapa3').style.display = 'none';
+  atualizarStepper(1);
+}
+
+function irEtapa2() {
+  renderizarColunas();
+  document.getElementById('etapa1').style.display = 'none';
+  document.getElementById('etapa2').style.display = 'block';
+  document.getElementById('etapa3').style.display = 'none';
+  atualizarStepper(2);
+}
+
+function irEtapa3() {
+  document.getElementById('etapa1').style.display = 'none';
+  document.getElementById('etapa2').style.display = 'none';
+  document.getElementById('etapa3').style.display = 'block';
+  document.getElementById('resultado-area').style.display = 'none';
+  atualizarStepper(3);
+}
+
+// atualiza visual do stepper
+function atualizarStepper(etapaAtiva) {
+  for (let i = 1; i <= 3; i++) {
+    const el = document.getElementById(`step${i}-indicator`);
+    el.classList.remove('active','done');
+    if (i < etapaAtiva)  el.classList.add('done');
+    if (i === etapaAtiva) el.classList.add('active');
+  }
+}
+
+// ─────────────────────────────────────
+// EXECUTAR CONSULTA
+// ─────────────────────────────────────
+
+async function executarConsulta() {
+  // monta o objeto tabelas_colunas convertendo Sets para Arrays
+  const tabelas_colunas = {};
+  tabelasSelecionadas.forEach(t => {
+    const cols = [...(colunasSelcionadas[t] || [])];
+    if (cols.length > 0) tabelas_colunas[t] = cols;
+  });
+
+  // monta o corpo da requisição
+  const body = {
+    tabelas_colunas,
+    state_sigla: document.getElementById('f-state').value.trim()    || null,
+    area:        document.getElementById('f-area').value.trim()      || null,
+    data_ini:    document.getElementById('f-data-ini').value         || null,
+    data_fim:    document.getElementById('f-data-fim').value         || null,
+    id_sp:       document.getElementById('f-idsp').value.trim()      || null,
+    limit:       parseInt(document.getElementById('f-limit').value)
+  };
+
+  // mostra loading
+  document.getElementById('resultado-area').style.display = 'block';
+  document.getElementById('result-tbody').innerHTML = `
+    <tr><td colspan="50">
+      <div class="state-msg"><div class="icon">⏳</div>Executando consulta...</div>
+    </td></tr>`;
+  document.getElementById('result-thead').innerHTML = '';
+  document.getElementById('result-stats').innerHTML = '';
+  document.getElementById('result-info').textContent = 'Consultando...';
+
+  try {
+    // envia POST para a rota /consulta-cruzada/
+    const resp = await fetch(`${API_URL}/consulta-cruzada/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+
+    if (!resp.ok) throw new Error(`Erro HTTP ${resp.status}`);
+    const resultado = await resp.json();
+
+    // verifica se a API retornou um erro interno
+    if (resultado.erro) {
+      throw new Error(resultado.erro);
+    }
+
+    dadosResultado = resultado.dados;
+    renderizarResultado(resultado);
+
+  } catch (err) {
+    document.getElementById('result-tbody').innerHTML = `
+      <tr><td colspan="50">
+        <div class="state-msg">
+          <div class="icon">❌</div>
+          Erro: ${err.message}
+        </div>
+      </td></tr>`;
+    document.getElementById('result-info').textContent = 'Erro na consulta';
+  }
+}
+
+// ─────────────────────────────────────
+// RENDERIZAR RESULTADO
+// ─────────────────────────────────────
+
+function renderizarResultado(resultado) {
+  const dados = resultado.dados;
+  const total = resultado.total;
+
+  // ── cards de resumo ──
+  const tabelasUsadas = [...tabelasSelecionadas].filter(t =>
+    colunasSelcionadas[t]?.size > 0);
+  const totalColunas = tabelasUsadas
+    .reduce((acc, t) => acc + (colunasSelcionadas[t]?.size || 0), 0);
+
+  document.getElementById('result-stats').innerHTML = `
+    <div class="stat-pill"><strong>${total}</strong> registros retornados</div>
+    <div class="stat-pill blue"><strong>${tabelasUsadas.length}</strong> tabelas cruzadas</div>
+    <div class="stat-pill"><strong>${totalColunas}</strong> colunas na tabela</div>
+  `;
+
+  document.getElementById('result-info').textContent =
+    `${total} registros — ${tabelasUsadas.length} tabelas cruzadas`;
+
+  if (!dados || dados.length === 0) {
+    document.getElementById('result-thead').innerHTML = '';
+    document.getElementById('result-tbody').innerHTML = `
+      <tr><td colspan="50">
+        <div class="state-msg"><div class="icon">📭</div>Nenhum registro encontrado.</div>
+      </td></tr>`;
+    return;
+  }
+
+  // ── cabeçalho ──
+  // cada coluna tem o formato "Tabela.campo"
+  const colunas = Object.keys(dados[0]);
+  document.getElementById('result-thead').innerHTML = '<tr>' +
+    colunas.map(c => {
+      // separa "Tabela.campo" em duas partes para exibir o nome da tabela menor
+      const partes = c.split('.');
+      const campo  = partes[partes.length - 1];
+      const tabela = partes.length > 1 ? partes[0] : '';
+      return `<th><span class="th-tabela">${tabela}</span>${campo}</th>`;
+    }).join('') + '</tr>';
+
+  // ── linhas ──
+  document.getElementById('result-tbody').innerHTML = dados.map(row =>
+    '<tr>' + colunas.map(col => {
+      let val = row[col];
+      if (val === null || val === undefined) return '<td style="color:#ccc">—</td>';
+      // badge de sexo
+      if (col.endsWith('.sex')) {
+        if (val === 'F') return `<td><span class="badge badge-f">F</span></td>`;
+        if (val === 'M') return `<td><span class="badge badge-m">M</span></td>`;
+      }
+      // itálico para nomes científicos
+      if (col.endsWith('.specie') || col.endsWith('.taxon')) {
+        return `<td><i>${val}</i></td>`;
+      }
+      return `<td>${val}</td>`;
+    }).join('') + '</tr>'
+  ).join('');
+
+  // habilita exportação
+  document.getElementById('btn-exportar').disabled = false;
+}
+
+// ─────────────────────────────────────
+// EXPORTAR CSV
+// ─────────────────────────────────────
+
+function exportarCSV() {
+  if (!dadosResultado || dadosResultado.length === 0) {
+    alert('Execute uma consulta antes de exportar.');
+    return;
+  }
+
+  const colunas = Object.keys(dadosResultado[0]);
+  const cabecalho = colunas.join(';');
+
+  const linhas = dadosResultado.map(row =>
+    colunas.map(col => {
+      let val = row[col];
+      if (val === null || val === undefined) val = '';
+      val = String(val).replace(/"/g, '""');
+      return val.includes(';') ? `"${val}"` : val;
+    }).join(';')
+  );
+
+  // \uFEFF = BOM para o Excel reconhecer acentos corretamente
+  const csv = '\uFEFF' + [cabecalho, ...linhas].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+
+  // nome do arquivo inclui as tabelas cruzadas e a data de hoje
+  const hoje = new Date().toISOString().split('T')[0];
+  const nomeTabelas = [...tabelasSelecionadas].join('_');
+  link.href     = url;
+  link.download = `cammarada_cruzado_${nomeTabelas}_${hoje}.csv`;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+// ─────────────────────────────────────
+// RESETAR TUDO
+// ─────────────────────────────────────
+
+function resetar() {
+  tabelasSelecionadas.clear();
+  colunasSelcionadas  = {};
+  dadosResultado      = [];
+  document.getElementById('btn-exportar').disabled = true;
+  renderizarCards();
+  irEtapa1();
+}
+
+// ─────────────────────────────────────
+// INICIALIZAÇÃO
+// ─────────────────────────────────────
+renderizarCards();
+</script>
+</body>
+</html>
