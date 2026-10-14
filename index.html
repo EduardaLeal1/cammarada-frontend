@@ -144,6 +144,87 @@
     .page-btn:hover{background:#F4F5F7}
     .page-btn.active{background:#E8650A;color:#fff;border-color:#E8650A}
     .page-btn:disabled{opacity:.4;cursor:default}
+
+    
+/* ===== AJUSTES PARA CELULARES ===== */
+@media (max-width: 600px) {
+    html {
+        min-width: 0;
+    }
+
+    body {
+        display: block;
+        height: auto;
+        min-height: 100vh;
+        overflow-x: hidden;
+        overflow-y: auto;
+    }
+
+    .sidebar {
+        width: 100%;
+        min-width: 0;
+        height: auto;
+    }
+
+    .main {
+        width: 100%;
+        min-width: 0;
+        min-height: 0;
+        height: auto;
+        overflow: visible;
+    }
+
+    .topbar {
+        flex-wrap: wrap;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 1rem;
+    }
+
+    .topbar > div {
+        max-width: 100%;
+    }
+
+    .topbar button {
+        max-width: 100%;
+        white-space: normal;
+    }
+
+    .content {
+        min-width: 0;
+        overflow: visible;
+        padding: 1rem;
+    }
+
+    .tabelas-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .filtros-row {
+        width: 100%;
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .filter-group {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .filter-group select,
+    .filter-group input {
+        width: 100%;
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .table-wrap {
+        max-width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
   </style>
 </head>
 <body>
